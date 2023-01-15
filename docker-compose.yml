@@ -1,0 +1,21 @@
+version: '3.3'
+services:
+
+  site:
+    build:
+      context: node
+      dockerfile: ../environments/node/Dockerfile
+    image: example-node-site:latest
+    ports:
+      - 8080:8080
+
+  db:
+    build:
+      context: environments/db
+      dockerfile: Dockerfile
+    image: example-node-db:latest
+    environment:
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes
+    ports:
+      - 3306:3306
+

@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 
+const fs = require('fs');
 const mariadb = require('mariadb');
 const path = require('path');
 
@@ -34,7 +35,38 @@ async function makeQuery(queryString) {
 // GET HANDLER
 // -----------
 app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, '/index.html'));
+  const queryPromise = makeQuery("SELECT * FROM test");
+  queryPromise.then(
+    (value) => {
+      let resultString = "";
+      // TODO: There has to be a more sane way to exclude the meta object...
+      for ( var i = 0; i < value.length; i++) {
+        const row = value[i];
+        for ( const key in row ) {
+          resultString = resultString + key + ": " + row[key] + "<br/>";
+        }
+        resultString = resultString + "------<br/>";
+      }
+  
+      // Insert the query result into the page content
+      const indexFile = path.join(__dirname, '/index.html');
+      fs.readFile(indexFile, 'utf8', function(err, data) {
+        if (err) {
+          console.error(err);
+          res.send(err);
+        } else {
+          const result = data.replace(/REPLACE_THIS_STRING/g, resultString);
+          res.send(result);
+        }
+      });
+    },
+    (reason) => {
+      console.log("Failure in query");
+      console.error(reason);
+      res.send(reason);
+    },
+  );
+
 });
 
 
@@ -43,9 +75,7 @@ app.get('/', function(req, res) {
 // ------------
 app.post('/', function(req, res) {
 
-
   const queryPromise = makeQuery("SELECT * FROM test");
-  // TODO: Is this actually how we should be using Promises?
   queryPromise.then(
     (value) => {
       let resultString = "";

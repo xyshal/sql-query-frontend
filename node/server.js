@@ -6,6 +6,30 @@ const app = express();
 const mariadb = require('mariadb');
 const path = require('path');
 
+// --------------
+// QUERY FUNCTION
+// --------------
+async function makeQuery(queryString) {
+  let conn;
+  let rows;
+
+  try {
+    conn = await mariadb.createConnection({
+      host: 'db',
+      database: 'testdb',
+      user: 'test'
+    });
+
+    rows = await conn.query(queryString);
+  } catch (err) {
+    throw err;
+  } finally {
+    if (conn) conn.end();
+    return rows;
+  }
+}
+
+
 // -----------
 // GET HANDLER
 // -----------
@@ -19,28 +43,8 @@ app.get('/', function(req, res) {
 // ------------
 app.post('/', function(req, res) {
 
-  // TODO: Functionalize this elsewhere.  Does that work with JS/node/this lib?
-  async function makeQuery() {
-    let conn;
-    let rows;
 
-    try {
-      conn = await mariadb.createConnection({
-        host: 'db',
-        database: 'testdb',
-        user: 'test'
-      });
-
-      rows = await conn.query("SELECT * FROM test");
-    } catch (err) {
-      throw err;
-    } finally {
-      if (conn) conn.end();
-      return rows;
-    }
-  }
-
-  const queryPromise = makeQuery();
+  const queryPromise = makeQuery("SELECT * FROM test");
   // TODO: Is this actually how we should be using Promises?
   queryPromise.then(
     (value) => {
